@@ -1,0 +1,36 @@
+name: Issue Automation
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  process-issue:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+    # Only run if the issue has the 'bug' label (applied by the template)
+    if: contains(github.event.issue.labels.*.name, 'bug')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Parse Issue Form Body
+        uses: stefanbuck/github-issue-parser@v3
+        id: parse
+        with:
+          template-path: .github/ISSUE_TEMPLATE/bug_report.yml
+      
+      - name: Echo Parsed Data
+        run: |
+          echo "Full JSON Payload:"
+          echo '${{ steps.parse.outputs.jsonString }}'
+          echo "------------------------------------------------"
+          echo "Accessing individual fields:"
+          echo "Severity: ${{ fromJSON(steps.parse.outputs.jsonString).severity }}"
+          echo "Component: ${{ fromJSON(steps.parse.outputs.jsonString).component }}"
+          echo "Version: ${{ fromJSON(steps.parse.outputs.jsonString).version }}"
+          echo "------------------------------------------------"
+          echo "Environment Details:"
+          echo "${{ fromJSON(steps.parse.outputs.jsonString).environment }}"
